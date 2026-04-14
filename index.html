@@ -100,6 +100,7 @@ select.form-input{cursor:pointer}
 /* BL DETAIL */
 .bl-detail-item{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
 .bl-detail-item:last-child{border-bottom:none}
+#screen-dashboard,#screen-vehicles,#screen-stock{display:none!important}
 </style>
 </head>
 <body>
@@ -110,28 +111,19 @@ select.form-input{cursor:pointer}
 </div>
 
 <!-- SCREENS -->
-<div class="screen active" id="screen-dashboard"></div>
+<div class="screen" id="screen-dashboard"></div>
 <div class="screen" id="screen-vehicles"></div>
 <div class="screen" id="screen-stock"></div>
-<div class="screen" id="screen-bl"></div>
+<div class="screen active" id="screen-bl"></div>
 <div class="screen" id="screen-newbl"></div>
 
 <!-- NAV -->
 <nav class="nav">
-  <div class="nav-item active" onclick="showScreen('dashboard',this)">
-    <span class="icon">⊞</span><span class="label">Tableau</span>
-  </div>
-  <div class="nav-item" onclick="showScreen('vehicles',this)">
-    <span class="icon">🚐</span><span class="label">Véhicules</span>
-  </div>
-  <div class="nav-item" onclick="showScreen('stock',this)">
-    <span class="icon">📦</span><span class="label">Stock</span>
-  </div>
-  <div class="nav-item" onclick="showScreen('bl',this)">
-    <span class="icon">📋</span><span class="label">BL</span>
+  <div class="nav-item active" onclick="showScreen('bl',this)">
+    <span class="icon">📋</span><span class="label">Bons de livraison</span>
   </div>
   <div class="nav-item" onclick="showScreen('newbl',this)">
-    <span class="icon">＋</span><span class="label">Nouveau</span>
+    <span class="icon">＋</span><span class="label">Nouveau BL</span>
   </div>
 </nav>
 
@@ -179,7 +171,7 @@ async function loadAll() {
     tryFetch(['Lignes_BL', '📝 Lignes_BL']),
   ]);
   data.vehicles = v; data.products = p; data.stock = s; data.bls = b; data.lines = l;
-  renderDashboard(); renderVehicles(); renderStock(); renderBL(); renderNewBL();
+  renderBL(); renderNewBL();
   showToast('Données mises à jour ✓');
 }
 
