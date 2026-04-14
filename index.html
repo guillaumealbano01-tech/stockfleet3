@@ -152,7 +152,7 @@ async function fetchSheet(name) {
     if (!match) return [];
     const json = JSON.parse(match[1]);
     if (!json.table || !json.table.rows) return [];
-    const cols = json.table.cols.map(c => c.label || c.id);
+    const cols = json.table.cols.map(c => (c.label || c.id || '').replace(/[\n\r]+/g, '_').trim());
     return json.table.rows.map(row => {
       const obj = {};
       row.c.forEach((cell, i) => { obj[cols[i]] = (cell && cell.v !== undefined) ? cell.v : null; });
@@ -235,16 +235,22 @@ function renderDashboard() {
 }
 
 function renderVehicles() {
-  const items = data.vehicles.map(v =>
-    `<div class="list-item">
+  const items = data.vehicles.map(v => {
+    const keys = Object.keys(v);
+    const id = v.ID_Vehicule || v.ID_Vehi_cule || v[keys[0]] || '';
+    const immat = v.Immatriculation || v[keys[1]] || '';
+    const conducteur = v.Conducteur || v[keys[7]] || '';
+    const service = v.Service_Dept || v[keys[8]] || '';
+    const statut = v.Statut || v[keys[9]] || '';
+    return `<div class="list-item">
       <div class="list-icon" style="background:rgba(0,212,168,.1)">🚐</div>
       <div class="list-info">
-        <div class="list-title">${v.ID_Vehicule || ''} · ${v.Immatriculation || ''}</div>
-        <div class="list-sub">${v.Conducteur || ''} · ${v.Service_Dept || ''}</div>
+        <div class="list-title">${id} · ${immat}</div>
+        <div class="list-sub">${conducteur} · ${service}</div>
       </div>
-      ${statusBadge(v.Statut)}
-    </div>`
-  ).join('');
+      ${statusBadge(statut)}
+    </div>`;
+  }).join('');
   document.getElementById('screen-vehicles').innerHTML = `
     <p class="section-title">${data.vehicles.length} véhicules</p>
     ${items || '<div class="loader"><div class="spinner"></div>Chargement...</div>'}
