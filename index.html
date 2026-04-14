@@ -302,14 +302,13 @@ function renderNewBL() {
   document.getElementById('screen-newbl').innerHTML = `
     <p class="section-title">Nouveau bon de livraison</p>
     <div class="card">
-      <label class="form-label">Agent / Conducteur</label>
-      <select class="form-input" id="bl-vehicule">${vOptions}</select>
+      <label class="form-label">Agent / Conducteur <span style="color:var(--danger)">*</span></label>
+      <input class="form-input" id="bl-vehicule" type="text" placeholder="Nom de l'agent" required>
       <label class="form-label">Client</label>
       <input class="form-input" id="bl-client" type="text" placeholder="Nom du client">
       <label class="form-label">Adresse</label>
       <input class="form-input" id="bl-adresse" type="text" placeholder="Adresse de livraison">
-      <label class="form-label">Email client</label>
-      <input class="form-input" id="bl-email" type="email" placeholder="email@client.fr">
+
     </div>
     <p class="section-title">Produits livrés</p>
     <div id="bl-products">
@@ -323,10 +322,9 @@ function renderNewBL() {
     <button class="btn btn-secondary" onclick="addProductLine()">+ Ajouter un produit</button>
     <p class="section-title" style="margin-top:16px">Signature client</p>
     <div class="sign-pad" id="sign-pad" onclick="toggleSign()">Appuyer pour signer</div>
-    <button class="btn btn-primary" style="margin-top:8px" onclick="generatePDF()">📄 Générer le PDF</button>
     <div style="display:flex;gap:8px;margin-top:8px">
-      <button class="btn btn-secondary" style="flex:1;margin-top:0" onclick="sendBL('whatsapp')">WhatsApp</button>
-      <button class="btn btn-secondary" style="flex:1;margin-top:0" onclick="sendBL('email')">Email</button>
+      <button class="btn btn-secondary" style="flex:1;margin-top:0" onclick="sendBL('whatsapp')">📲 WhatsApp</button>
+      <button class="btn btn-primary" style="flex:1;margin-top:0" onclick="generatePDF()">📄 PDF</button>
     </div>
   `;
 }
@@ -357,13 +355,11 @@ function toggleSign() {
 }
 
 function getBLData() {
-  const sel = document.getElementById('bl-vehicule');
-  const vehicule = sel?.value || '';
-  const conducteur = sel?.options[sel.selectedIndex]?.getAttribute('data-conducteur') || vehicule;
-  const immat = sel?.options[sel.selectedIndex]?.getAttribute('data-immat') || '';
+  const conducteur = document.getElementById('bl-vehicule')?.value?.trim() || '';
+  const vehicule = conducteur;
+  const immat = '';
   const client   = document.getElementById('bl-client')?.value || '';
   const adresse  = document.getElementById('bl-adresse')?.value || '';
-  const email    = document.getElementById('bl-email')?.value || '';
   const signe    = document.getElementById('sign-pad')?.classList.contains('signed');
   const date     = new Date().toLocaleDateString('fr-FR');
   const blNum    = 'BL-' + Date.now().toString().slice(-6);
@@ -497,11 +493,7 @@ function generatePDF() {
 function sendBL(via) {
   const d = getBLData();
   if (!d.client) { showToast('⚠ Renseignez le client'); return; }
-  if (via === 'email' && d.email) {
-    const subject = encodeURIComponent(`Bon de livraison ${d.blNum} — ${d.client}`);
-    const body = encodeURIComponent(`Bonjour,\n\nVeuillez trouver ci-joint votre bon de livraison ${d.blNum}.\n\nCordialement,\nStockFleet`);
-    window.open(`mailto:${d.email}?subject=${subject}&body=${body}`);
-  } else if (via === 'whatsapp') {
+  if (via === 'whatsapp') {
     const msg = encodeURIComponent(`Bonjour ${d.client},\n\nVotre bon de livraison ${d.blNum} est prêt.\nAgent : ${d.conducteur || d.vehicule}\nDate : ${d.date}\n\nCordialement,\nStockFleet`);
     window.open(`https://wa.me/?text=${msg}`);
   }
