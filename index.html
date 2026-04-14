@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0f1923">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="StockFleet">
+<link rel="manifest" href="manifest.json">
+<title>StockFleet</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f1923;
+  --surface: #1a2636;
+  --surface2: #223044;
+  --accent: #00d4a8;
+  --accent2: #3b82f6;
+  --warn: #f59e0b;
+  --danger: #ef4444;
+  --text: #f0f4f8;
+  --text2: #8fa3b8;
+  --border: rgba(255,255,255,0.08);
+  --radius: 14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;max-width:430px;margin:0 auto;overflow-x:hidden}
+/* STATUS BAR */
+.status-bar{background:var(--surface);padding:12px 20px 8px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border)}
+.app-logo{font-size:17px;font-weight:600;letter-spacing:-.3px}
+.app-logo span{color:var(--accent)}
+.sync-btn{background:none;border:1px solid var(--border);color:var(--text2);padding:5px 12px;border-radius:20px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;align-items:center;gap:5px}
+.sync-btn:active{opacity:.7}
+/* NAV */
+.nav{display:flex;background:var(--surface);border-top:1px solid var(--border);position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;z-index:100}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 4px 14px;cursor:pointer;gap:4px;transition:color .15s}
+.nav-item .icon{font-size:20px}
+.nav-item .label{font-size:10px;font-weight:500;color:var(--text2)}
+.nav-item.active .label{color:var(--accent)}
+.nav-item.active .icon{filter:drop-shadow(0 0 6px var(--accent))}
+/* SCREENS */
+.screen{display:none;padding:16px 16px 90px;animation:fadeIn .2s ease}
+.screen.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px}
+.card-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.card-row:last-child{margin-bottom:0}
+/* STAT GRID */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
+.stat-label{font-size:11px;color:var(--text2);margin-bottom:6px;font-weight:500;text-transform:uppercase;letter-spacing:.5px}
+.stat-value{font-size:26px;font-weight:600;font-family:'DM Mono',monospace}
+.stat-value.accent{color:var(--accent)}
+.stat-value.warn{color:var(--warn)}
+.stat-value.danger{color:var(--danger)}
+/* BADGES */
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500}
+.badge-ok{background:rgba(0,212,168,.15);color:var(--accent)}
+.badge-warn{background:rgba(245,158,11,.15);color:var(--warn)}
+.badge-danger{background:rgba(239,68,68,.15);color:var(--danger)}
+.badge-blue{background:rgba(59,130,246,.15);color:var(--accent2)}
+/* LIST ITEMS */
+.list-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:background .15s}
+.list-item:active{background:var(--surface2)}
+.list-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.list-info{flex:1;min-width:0}
+.list-title{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.list-sub{font-size:12px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chevron{color:var(--text2);font-size:16px}
+/* SECTION TITLE */
+.section-title{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;margin-top:4px}
+/* FORM */
+.form-label{font-size:12px;color:var(--text2);margin-bottom:5px;display:block;font-weight:500}
+.form-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:14px;color:var(--text);font-family:'DM Sans',sans-serif;margin-bottom:12px;outline:none}
+.form-input:focus{border-color:var(--accent)}
+select.form-input{cursor:pointer}
+.btn{display:block;width:100%;padding:13px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;text-align:center;border:none;font-family:'DM Sans',sans-serif;transition:opacity .15s}
+.btn:active{opacity:.8}
+.btn-primary{background:var(--accent);color:#0f1923}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);margin-top:8px}
+/* SIGN PAD */
+.sign-pad{width:100%;height:90px;background:var(--surface2);border:1px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--text2);margin-bottom:12px;cursor:pointer;transition:all .2s}
+.sign-pad.signed{border-color:var(--accent);border-style:solid;color:var(--accent)}
+/* LOADER */
+.loader{text-align:center;padding:40px;color:var(--text2);font-size:14px}
+.spinner{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* DETAIL HEADER */
+.detail-header{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.back-btn{background:none;border:none;color:var(--accent);font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif;padding:0}
+/* TOAST */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--accent);color:#0f1923;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:200;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+/* STOCK BAR */
+.stock-bar-bg{background:var(--surface2);border-radius:4px;height:4px;margin-top:6px}
+.stock-bar-fill{height:4px;border-radius:4px;transition:width .4s}
+/* BL DETAIL */
+.bl-detail-item{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.bl-detail-item:last-child{border-bottom:none}
+</style>
+</head>
+<body>
+
+<div class="status-bar">
+  <div class="app-logo">Stock<span>Fleet</span></div>
+  <button class="sync-btn" onclick="loadAll()">↻ Sync</button>
+</div>
+
+<!-- SCREENS -->
+<div class="screen active" id="screen-dashboard"></div>
+<div class="screen" id="screen-vehicles"></div>
+<div class="screen" id="screen-stock"></div>
+<div class="screen" id="screen-bl"></div>
+<div class="screen" id="screen-newbl"></div>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-item active" onclick="showScreen('dashboard',this)">
+    <span class="icon">⊞</span><span class="label">Tableau</span>
+  </div>
+  <div class="nav-item" onclick="showScreen('vehicles',this)">
+    <span class="icon">🚐</span><span class="label">Véhicules</span>
+  </div>
+  <div class="nav-item" onclick="showScreen('stock',this)">
+    <span class="icon">📦</span><span class="label">Stock</span>
+  </div>
+  <div class="nav-item" onclick="showScreen('bl',this)">
+    <span class="icon">📋</span><span class="label">BL</span>
+  </div>
+  <div class="nav-item" onclick="showScreen('newbl',this)">
+    <span class="icon">＋</span><span class="label">Nouveau</span>
+  </div>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SHEET_ID = '1_OC5t-g2dCq2cbrxjGhIv0JtjJHyrraH8ZAkSFzgnlg';
+const BASE = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=`;
+
+let data = { vehicles:[], products:[], stock:[], bls:[], lines:[] };
+
+async function fetchSheet(name) {
+  try {
+    const url = BASE + encodeURIComponent(name);
+    const r = await fetch(url);
+    const txt = await r.text();
+    const match = txt.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
+    if (!match) return [];
+    const json = JSON.parse(match[1]);
+    if (!json.table || !json.table.rows) return [];
+    const cols = json.table.cols.map(c => c.label || c.id);
+    return json.table.rows.map(row => {
+      const obj = {};
+      row.c.forEach((cell, i) => { obj[cols[i]] = (cell && cell.v !== undefined) ? cell.v : null; });
+      return obj;
+    }).filter(r => r[cols[0]] !== null && r[cols[0]] !== '');
+  } catch(e) { return []; }
+}
+
+async function tryFetch(names) {
+  for (const name of names) {
+    const r = await fetchSheet(name);
+    if (r.length > 0) return r;
+  }
+  return [];
+}
+
+async function loadAll() {
+  showToast('Synchronisation...');
+  const [v, p, s, b, l] = await Promise.all([
+    tryFetch(['Vehicules', '🚐 Véhicules', 'Feuille1']),
+    tryFetch(['Produits', '📦 Produits', 'Catalogue']),
+    tryFetch(['Stock_Vehicules', '📊 Stock_Vehicules']),
+    tryFetch(['Bons_Livraison', '📋 Bons_Livraison']),
+    tryFetch(['Lignes_BL', '📝 Lignes_BL']),
+  ]);
+  data.vehicles = v; data.products = p; data.stock = s; data.bls = b; data.lines = l;
+  renderDashboard(); renderVehicles(); renderStock(); renderBL(); renderNewBL();
+  showToast('Données mises à jour ✓');
+}
+
+function showScreen(name, el) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  if (el) el.classList.add('active');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function statusBadge(s) {
+  if (!s) return '';
+  const sl = s.toLowerCase();
+  if (sl.includes('ok') || sl.includes('dispo')) return `<span class="badge badge-ok">${s}</span>`;
+  if (sl.includes('bas') || sl.includes('attente') || sl.includes('prêt')) return `<span class="badge badge-warn">${s}</span>`;
+  if (sl.includes('hors') || sl.includes('critique') || sl.includes('bas')) return `<span class="badge badge-danger">${s}</span>`;
+  return `<span class="badge badge-blue">${s}</span>`;
+}
+
+function renderDashboard() {
+  const total = data.vehicles.length;
+  const actifs = data.vehicles.filter(v => v.Statut && v.Statut.toLowerCase().includes('occup')).length;
+  const blCount = data.bls.length;
+  const blAttente = data.bls.filter(b => b.Statut && b.Statut.toLowerCase().includes('attente')).length;
+
+  const recent = data.bls.slice(-4).reverse().map(b =>
+    `<div class="list-item">
+      <div class="list-icon" style="background:rgba(59,130,246,.15)">📋</div>
+      <div class="list-info">
+        <div class="list-title">${b.ID_BL || ''}</div>
+        <div class="list-sub">${b.ID_Vehicule || ''} · ${b.Client_Nom || ''}</div>
+      </div>
+      ${statusBadge(b.Statut)}
+    </div>`
+  ).join('');
+
+  document.getElementById('screen-dashboard').innerHTML = `
+    <div class="stat-grid">
+      <div class="stat"><div class="stat-label">Véhicules</div><div class="stat-value accent">${total}</div></div>
+      <div class="stat"><div class="stat-label">Occupés</div><div class="stat-value">${actifs}</div></div>
+      <div class="stat"><div class="stat-label">Total BL</div><div class="stat-value">${blCount}</div></div>
+      <div class="stat"><div class="stat-label">En attente</div><div class="stat-value warn">${blAttente}</div></div>
+    </div>
+    <p class="section-title">Bons récents</p>
+    ${recent || '<div class="loader">Aucun bon de livraison</div>'}
+  `;
+}
+
+function renderVehicles() {
+  const items = data.vehicles.map(v =>
+    `<div class="list-item">
+      <div class="list-icon" style="background:rgba(0,212,168,.1)">🚐</div>
+      <div class="list-info">
+        <div class="list-title">${v.ID_Vehicule || ''} · ${v.Immatriculation || ''}</div>
+        <div class="list-sub">${v.Conducteur || ''} · ${v.Service_Dept || ''}</div>
+      </div>
+      ${statusBadge(v.Statut)}
+    </div>`
+  ).join('');
+  document.getElementById('screen-vehicles').innerHTML = `
+    <p class="section-title">${data.vehicles.length} véhicules</p>
+    ${items || '<div class="loader"><div class="spinner"></div>Chargement...</div>'}
+  `;
+}
+
+function renderStock() {
+  const byVehicle = {};
+  data.stock.forEach(s => {
+    if (!byVehicle[s.ID_Vehicule]) byVehicle[s.ID_Vehicule] = [];
+    byVehicle[s.ID_Vehicule].push(s);
+  });
+  const html = Object.entries(byVehicle).map(([vid, items]) => {
+    const rows = items.map(s => {
+      const qty = parseFloat(s.Quantite_Actuelle) || 0;
+      const prod = data.products.find(p => p.ID_Produit === s.ID_Produit);
+      const min = prod ? (parseFloat(prod.Stock_Min) || 0) : 0;
+      const max = prod ? (parseFloat(prod.Stock_Max) || 100) : 100;
+      const pct = max > 0 ? Math.min(100, Math.round(qty / max * 100)) : 0;
+      const color = qty <= min ? 'var(--danger)' : qty <= min * 2 ? 'var(--warn)' : 'var(--accent)';
+      return `<div class="bl-detail-item">
+        <span>${s.Nom_Produit || s.Ref_Produit || ''}</span>
+        <span style="font-family:'DM Mono',monospace;color:${color};font-weight:500">${qty}</span>
+      </div>
+      <div class="stock-bar-bg"><div class="stock-bar-fill" style="width:${pct}%;background:${color}"></div></div>`;
+    }).join('');
+    return `<p class="section-title" style="margin-top:14px">${vid}</p><div class="card">${rows}</div>`;
+  }).join('');
+  document.getElementById('screen-stock').innerHTML = html ||
+    '<div class="loader"><div class="spinner"></div>Chargement...</div>';
+}
+
+function renderBL() {
+  const items = data.bls.map(b =>
+    `<div class="list-item">
+      <div class="list-icon" style="background:rgba(167,139,250,.15)">📄</div>
+      <div class="list-info">
+        <div class="list-title">${b.ID_BL || ''}</div>
+        <div class="list-sub">${b.ID_Vehicule || ''} · ${b.Client_Nom || ''} · ${b.Date_BL || ''}</div>
+      </div>
+      ${statusBadge(b.Statut)}
+    </div>`
+  ).join('');
+  document.getElementById('screen-bl').innerHTML = `
+    <p class="section-title">${data.bls.length} bons de livraison</p>
+    ${items || '<div class="loader">Aucun bon de livraison</div>'}
+  `;
+}
+
+function renderNewBL() {
+  const vOptions = data.vehicles.length ? data.vehicles.map(v => `<option value="${v.ID_Vehicule||''}"> ${v.ID_Vehicule||''} · ${v.Immatriculation||''} · ${v.Conducteur||''}</option>`).join('') : '<option>Sync d abord</option>';
+  const pOptions = data.products.map(p =>
+    `<option value="${p.ID_Produit}">${p.Ref_Produit} — ${p.Nom_Produit}</option>`
+  ).join('');
+
+  document.getElementById('screen-newbl').innerHTML = `
+    <p class="section-title">Nouveau bon de livraison</p>
+    <div class="card">
+      <label class="form-label">Véhicule</label>
+      <select class="form-input" id="bl-vehicule">${vOptions}</select>
+      <label class="form-label">Client</label>
+      <input class="form-input" id="bl-client" type="text" placeholder="Nom du client">
+      <label class="form-label">Adresse</label>
+      <input class="form-input" id="bl-adresse" type="text" placeholder="Adresse de livraison">
+      <label class="form-label">Email client</label>
+      <input class="form-input" id="bl-email" type="email" placeholder="email@client.fr">
+    </div>
+    <p class="section-title">Produits livrés</p>
+    <div id="bl-products">
+      <div class="card" style="margin-bottom:8px">
+        <label class="form-label">Produit</label>
+        <select class="form-input">${pOptions}</select>
+        <label class="form-label">Quantité</label>
+        <input class="form-input" type="number" value="1" min="1">
+      </div>
+    </div>
+    <button class="btn btn-secondary" onclick="addProductLine()">+ Ajouter un produit</button>
+    <p class="section-title" style="margin-top:16px">Signature client</p>
+    <div class="sign-pad" id="sign-pad" onclick="toggleSign()">Appuyer pour signer</div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn btn-secondary" style="flex:1;margin-top:0" onclick="sendBL('whatsapp')">WhatsApp</button>
+      <button class="btn btn-primary" style="flex:1" onclick="sendBL('email')">Envoyer Email</button>
+    </div>
+  `;
+}
+
+function addProductLine() {
+  const pOptions = data.products.map(p =>
+    `<option value="${p.ID_Produit}">${p.Ref_Produit} — ${p.Nom_Produit}</option>`
+  ).join('');
+  const div = document.createElement('div');
+  div.className = 'card'; div.style.marginBottom = '8px';
+  div.innerHTML = `
+    <label class="form-label">Produit</label>
+    <select class="form-input">${pOptions}</select>
+    <label class="form-label">Quantité</label>
+    <input class="form-input" type="number" value="1" min="1">
+    <button class="btn btn-secondary" style="padding:7px;font-size:12px;color:var(--danger);border-color:var(--danger)" onclick="this.closest('.card').remove()">Supprimer</button>
+  `;
+  document.getElementById('bl-products').appendChild(div);
+}
+
+function toggleSign() {
+  const p = document.getElementById('sign-pad');
+  if (p.classList.contains('signed')) {
+    p.classList.remove('signed'); p.textContent = 'Appuyer pour signer';
+  } else {
+    p.classList.add('signed'); p.textContent = '✓ Signé';
+  }
+}
+
+function sendBL(via) {
+  const client = document.getElementById('bl-client')?.value;
+  const email = document.getElementById('bl-email')?.value;
+  if (!client) { showToast('⚠ Renseignez le client'); return; }
+  if (via === 'email' && email) {
+    const subject = encodeURIComponent('Bon de livraison StockFleet');
+    const body = encodeURIComponent(`Bonjour,\n\nVeuillez trouver ci-joint votre bon de livraison.\n\nCordialement,\nStockFleet`);
+    window.open(`mailto:${email}?subject=${subject}&body=${body}`);
+  } else if (via === 'whatsapp') {
+    const msg = encodeURIComponent(`Bonjour ${client}, votre bon de livraison StockFleet est prêt.`);
+    window.open(`https://wa.me/?text=${msg}`);
+  }
+  showToast('BL envoyé ✓');
+}
+
+loadAll();
+</script>
+</body>
+</html>
