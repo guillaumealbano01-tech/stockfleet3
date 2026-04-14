@@ -322,9 +322,11 @@ function renderNewBL() {
     <button class="btn btn-secondary" onclick="addProductLine()">+ Ajouter un produit</button>
     <p class="section-title" style="margin-top:16px">Signature client</p>
     <div class="sign-pad" id="sign-pad" onclick="toggleSign()">Appuyer pour signer</div>
-    <div style="display:flex;gap:8px;margin-top:8px">
-      <button class="btn btn-secondary" style="flex:1;margin-top:0" onclick="sendBL('whatsapp')">📲 WhatsApp</button>
-      <button class="btn btn-primary" style="flex:1;margin-top:0" onclick="generatePDF()">📄 PDF</button>
+    <button class="btn btn-primary" style="margin-top:8px" onclick="sendWhatsApp()">📲 Envoyer via WhatsApp</button>
+    <div id="pdf-preview" style="display:none;margin-top:12px">
+      <p style="font-size:12px;color:var(--text2);margin-bottom:8px">PDF prêt — appuie sur Partager pour l'envoyer via WhatsApp</p>
+      <iframe id="pdf-frame" style="width:100%;height:420px;border-radius:10px;border:1px solid var(--border)"></iframe>
+      <button class="btn btn-primary" style="margin-top:8px" onclick="sharePDF()">📲 Partager via WhatsApp</button>
     </div>
   `;
 }
@@ -372,86 +374,65 @@ function getBLData() {
       produits.push({ nom: sel.options[sel.selectedIndex]?.text || '', qte: qty.value });
     }
   });
-  return { vehicule, conducteur, immat, client, adresse, email, signe, date, blNum, produits };
+  return { vehicule, conducteur, immat, client, adresse, signe, date, blNum, produits };
 }
 
-function generatePDF() {
+
+let pdfBlob = null;
+
+function sendWhatsApp() {
   const d = getBLData();
   if (!d.client) { showToast('⚠ Renseignez le client'); return; }
+  if (!d.conducteur) { showToast('⚠ Renseignez l\'agent'); return; }
 
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-
   const W = 210, margin = 18;
 
-  // En-tête
   doc.setFillColor(15, 25, 35);
   doc.rect(0, 0, W, 32, 'F');
   doc.setTextColor(0, 212, 168);
-  doc.setFontSize(22);
-  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(22); doc.setFont('helvetica', 'bold');
   doc.text('StockFleet', margin, 18);
   doc.setTextColor(180, 200, 220);
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10); doc.setFont('helvetica', 'normal');
   doc.text('Bon de Livraison', margin, 26);
-  doc.setTextColor(255,255,255);
-  doc.setFontSize(11);
+  doc.setTextColor(255,255,255); doc.setFontSize(11);
   doc.text(d.blNum, W - margin, 18, { align: 'right' });
   doc.setFontSize(9);
   doc.text(d.date, W - margin, 26, { align: 'right' });
 
-  // Infos véhicule + client
   let y = 44;
-  doc.setTextColor(30, 30, 30);
   doc.setFillColor(240, 245, 250);
   doc.roundedRect(margin, y, (W - margin*2) / 2 - 4, 36, 3, 3, 'F');
   doc.roundedRect(margin + (W - margin*2)/2 + 4, y, (W - margin*2)/2 - 4, 36, 3, 3, 'F');
-
-  doc.setFontSize(8);
-  doc.setTextColor(100, 120, 140);
+  doc.setFontSize(8); doc.setTextColor(100, 120, 140);
   doc.text('AGENT', margin + 4, y + 7);
-  doc.setFontSize(11);
-  doc.setTextColor(20, 20, 20);
-  doc.setFont('helvetica', 'bold');
-  doc.text(d.conducteur || d.vehicule, margin + 4, y + 16);
-  doc.setFontSize(8);
-  doc.setTextColor(100,120,140);
+  doc.setFontSize(11); doc.setTextColor(20, 20, 20); doc.setFont('helvetica', 'bold');
+  doc.text(d.conducteur, margin + 4, y + 16);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(100,120,140);
   doc.text(d.immat || '', margin + 4, y + 23);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
 
   const cx = margin + (W - margin*2)/2 + 8;
-  doc.setFontSize(8);
-  doc.setTextColor(100, 120, 140);
+  doc.setFontSize(8); doc.setTextColor(100, 120, 140);
   doc.text('CLIENT', cx, y + 7);
-  doc.setFontSize(11);
-  doc.setTextColor(20, 20, 20);
-  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11); doc.setTextColor(20, 20, 20); doc.setFont('helvetica', 'bold');
   doc.text(d.client, cx, y + 16);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.setTextColor(80, 80, 80);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(80, 80, 80);
   doc.text(d.adresse, cx, y + 24);
-  doc.text(d.email, cx, y + 30);
 
-  // Tableau produits
   y += 46;
   doc.setFillColor(15, 25, 35);
   doc.rect(margin, y, W - margin*2, 9, 'F');
-  doc.setTextColor(255,255,255);
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(255,255,255); doc.setFontSize(9); doc.setFont('helvetica', 'bold');
   doc.text('PRODUIT', margin + 4, y + 6);
   doc.text('QTÉ', W - margin - 4, y + 6, { align: 'right' });
-
   y += 9;
   doc.setFont('helvetica', 'normal');
   d.produits.forEach((p, i) => {
     doc.setFillColor(i % 2 === 0 ? 248 : 255, i % 2 === 0 ? 250 : 255, i % 2 === 0 ? 252 : 255);
     doc.rect(margin, y, W - margin*2, 8, 'F');
-    doc.setTextColor(30, 30, 30);
-    doc.setFontSize(9);
+    doc.setTextColor(30, 30, 30); doc.setFontSize(9);
     doc.text(p.nom.substring(0, 60), margin + 4, y + 5.5);
     doc.setFont('helvetica', 'bold');
     doc.text(String(p.qte), W - margin - 4, y + 5.5, { align: 'right' });
@@ -459,45 +440,53 @@ function generatePDF() {
     y += 8;
   });
 
-  // Ligne de séparation
   y += 6;
   doc.setDrawColor(200, 210, 220);
   doc.line(margin, y, W - margin, y);
-
-  // Signature
   y += 10;
-  doc.setFontSize(9);
-  doc.setTextColor(80, 80, 80);
+  doc.setFontSize(9); doc.setTextColor(80, 80, 80);
   doc.text('Signature client :', margin, y);
   if (d.signe) {
-    doc.setTextColor(0, 160, 120);
-    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 160, 120); doc.setFont('helvetica', 'bold');
     doc.text('✓ Signé', margin + 36, y);
     doc.setFont('helvetica', 'normal');
   } else {
     doc.setDrawColor(180, 190, 200);
     doc.roundedRect(margin, y + 3, 70, 18, 2, 2);
   }
-
-  // Pied de page
   doc.setFillColor(240, 245, 250);
   doc.rect(0, 282, W, 15, 'F');
-  doc.setFontSize(8);
-  doc.setTextColor(120, 140, 160);
-  doc.text('StockFleet — Document généré le ' + d.date, W/2, 290, { align: 'center' });
+  doc.setFontSize(8); doc.setTextColor(120, 140, 160);
+  doc.text('StockFleet — ' + d.date, W/2, 290, { align: 'center' });
 
-  doc.save(`${d.blNum}_${d.client.replace(/\s+/g,'_')}.pdf`);
-  showToast('PDF téléchargé ✓');
+  pdfBlob = doc.output('blob');
+  const url = URL.createObjectURL(pdfBlob);
+  document.getElementById('pdf-frame').src = url;
+  document.getElementById('pdf-preview').style.display = 'block';
+  document.getElementById('pdf-preview').scrollIntoView({ behavior: 'smooth' });
+  showToast('PDF généré ✓');
 }
 
-function sendBL(via) {
+async function sharePDF() {
   const d = getBLData();
-  if (!d.client) { showToast('⚠ Renseignez le client'); return; }
-  if (via === 'whatsapp') {
-    const msg = encodeURIComponent(`Bonjour ${d.client},\n\nVotre bon de livraison ${d.blNum} est prêt.\nAgent : ${d.conducteur || d.vehicule}\nDate : ${d.date}\n\nCordialement,\nStockFleet`);
-    window.open(`https://wa.me/?text=${msg}`);
+  if (!pdfBlob) { showToast('⚠ Génère d\'abord le PDF'); return; }
+  const fileName = `BL_${d.blNum}_${d.client.replace(/\s+/g,'_')}.pdf`;
+  const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
+  const msg = `Bonjour ${d.client},\nVotre bon de livraison ${d.blNum} est prêt.\nAgent : ${d.conducteur}\nDate : ${d.date}`;
+  if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], text: msg });
+      showToast('Partagé ✓');
+    } catch(e) {
+      if (e.name !== 'AbortError') openWhatsApp(d, msg);
+    }
+  } else {
+    openWhatsApp(d, msg);
   }
-  showToast('Ouverture ✓');
+}
+
+function openWhatsApp(d, msg) {
+  window.open('https://wa.me/?text=' + encodeURIComponent(msg));
 }
 
 loadAll();
