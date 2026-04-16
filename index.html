@@ -461,25 +461,25 @@ async function sendViaWhatsApp() {
   // Envoyer au Google Apps Script pour mettre à jour les stocks
   showToast('Mise à jour du stock...');
   try {
-    if (WEBAPP_URL && WEBAPP_URL !== 'https://script.google.com/macros/s/AKfycbyWZ4k7cGYY2DupNsavOGXGODtnGvv14Yciev259WpFP9X4ApN_OQRPYrSEdLv8HP57Lg/exec') {
-      await fetch(WEBAPP_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          conducteur: d.conducteur,
-          blNum: d.blNum,
-          date: d.date,
-          client: d.client,
-          adresse: d.adresse,
-          produits: d.produits
-        })
-      });
-      showToast('Stock mis à jour ✓');
-      // Recharger le stock de l'agent
+    await fetch(WEBAPP_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        conducteur: d.conducteur,
+        blNum: d.blNum,
+        date: d.date,
+        client: d.client,
+        adresse: d.adresse,
+        produits: d.produits
+      })
+    });
+    // Recharger le stock après mise à jour (attendre 2s que le script ait traité)
+    setTimeout(async () => {
       await loadAgentStock(d.conducteur);
       renderNewBL();
-    }
+      showToast('Stock mis à jour ✓');
+    }, 2000);
   } catch(err) {
     console.log('Erreur envoi script:', err);
   }
