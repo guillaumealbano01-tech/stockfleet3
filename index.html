@@ -232,9 +232,9 @@ document.getElementById('login-name').addEventListener('keydown', e => {
 // ── Data ───────────────────────────────────────────────────────
 async function loadAll() {
   const [v, p, b] = await Promise.all([
-    tryFetch(['🚐 Véhicules','Vehicules','Véhicules']),
-    tryFetch(['📦 Produits','Produits']),
-    tryFetch(['📋 Bons_Livraison','Bons_Livraison']),
+    tryFetch(['Véhicules','Vehicules','🚐 Véhicules']),
+    tryFetch(['Produits','📦 Produits']),
+    tryFetch(['Bons_Livraison','📋 Bons_Livraison']),
   ]);
   data.vehicles = v; data.products = p; data.bls = b;
 }
@@ -310,9 +310,14 @@ function getAgentProducts() {
 
 // ── Render BL ──────────────────────────────────────────────────
 function renderBL() {
+  // Chercher les BL par ID véhicule (plusieurs tentatives de noms de colonnes)
+  const vid = currentAgent?.vehicle?.ID_Vehicule ||
+              currentAgent?.vehicle?.ID_Vehi_cule ||
+              currentAgent?.vehicle?.[Object.keys(currentAgent?.vehicle||{})[0]] || '';
+
   const agentBLs = data.bls.filter(b => {
-    const vid = currentAgent?.vehicle?.ID_Vehicule || '';
-    return (b.ID_Vehicule||'').toString() === vid;
+    const bvid = (b.ID_Vehicule || b.ID_Vehi_cule || '').toString().trim();
+    return bvid === vid.toString().trim();
   });
 
   const items = agentBLs.length
@@ -327,14 +332,18 @@ function renderBL() {
       </div>`).join('')
     : '<div class="loader" style="padding:20px;font-size:13px">Aucun bon de livraison pour ce véhicule.</div>';
 
-  const vid = currentAgent?.vehicle?.ID_Vehicule || '';
+  const vid = currentAgent?.vehicle?.ID_Vehicule ||
+             currentAgent?.vehicle?.ID_Vehi_cule ||
+             currentAgent?.vehicle?.[Object.keys(currentAgent?.vehicle||{})[0]] || '';
   const cond = currentAgent?.name || '';
+  const allKeys = Object.keys(currentAgent?.vehicle||{}).join(', ');
   document.getElementById('screen-bl').innerHTML = `
     <div class="agent-banner">
       <div class="agent-avatar">${cond.charAt(0)}</div>
       <div>
         <div style="font-size:14px;font-weight:500">${cond}</div>
-        <div style="font-size:12px;color:var(--text2)">${vid} · ${currentAgent?.vehicle?.Immatriculation||''}</div>
+        <div style="font-size:12px;color:var(--text2)">ID: ${vid} · ${currentAgent?.vehicle?.Immatriculation||''}</div>
+        <div style="font-size:10px;color:var(--text2);margin-top:2px">BL filtrés: ${agentBLs.length} / ${data.bls.length} total</div>
       </div>
     </div>
     <p class="section-title">${agentBLs.length} bon(s) de livraison</p>
