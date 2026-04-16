@@ -101,6 +101,7 @@ select.form-input{cursor:pointer}
 
   <div class="screen active" id="screen-bl"></div>
   <div class="screen" id="screen-newbl"></div>
+<div id="debug-panel" style="display:none;position:fixed;top:60px;left:0;right:0;background:#1a2636;color:#00d4a8;font-size:11px;padding:8px 12px;z-index:999;border-bottom:1px solid rgba(255,255,255,0.1)"></div>
 
   <nav class="nav">
     <div class="nav-item active" onclick="showScreen('bl',this)">
@@ -115,7 +116,7 @@ select.form-input{cursor:pointer}
 <div class="toast" id="toast"></div>
 
 <script>
-const SHEET_ID = '1_OC5t-g2dCq2cbrxjGhIv0JtjJHyrraH8ZAkSFzgnlg';
+const SHEET_ID = '1yeysIr5r1I9PYjFhTkabWhG4T2jCut9GNQJki80b06s';
 // ⬇ Coller ici l'URL de déploiement de ton Google Apps Script
 const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyWZ4k7cGYY2DupNsavOGXGODtnGvv14Yciev259WpFP9X4ApN_OQRPYrSEdLv8HP57Lg/exec';
 const BASE = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=`;
@@ -231,33 +232,57 @@ document.getElementById('login-name').addEventListener('keydown', e => {
 // ── Data ───────────────────────────────────────────────────────
 async function loadAll() {
   const [v, p, b] = await Promise.all([
-    tryFetch(['Vehicules','🚐 Véhicules']),
-    tryFetch(['Produits','📦 Produits']),
-    tryFetch(['Bons_Livraison','📋 Bons_Livraison']),
+    tryFetch(['🚐 Véhicules','Vehicules','Véhicules']),
+    tryFetch(['📦 Produits','Produits']),
+    tryFetch(['📋 Bons_Livraison','Bons_Livraison']),
   ]);
   data.vehicles = v; data.products = p; data.bls = b;
 }
 
 async function loadAgentStock(conducteurName) {
   const clean = conducteurName.replace(/[\/\\*?\[\]:]/g, '-').substring(0, 31).trim();
-  // headers=3 indique à l'API que les vrais headers sont en ligne 2 (ligne 1 = titre)
   try {
-    const url = BASE + encodeURIComponent(clean) + '&headers=3';
+    const url = BASE + encodeURIComponent(clean);
     const r = await fetch(url);
     const txt = await r.text();
     const match = txt.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
     if (!match) { data.stock = []; return false; }
     const json = JSON.parse(match[1]);
     if (!json.table || !json.table.rows) { data.stock = []; return false; }
+
     const cols = json.table.cols.map(c => (c.label||c.id||'').replace(/[\n\r]+/g,'_').trim());
-    data.stock = json.table.rows.map(row => {
-      const obj = {};
-      row.c.forEach((cell,i) => { obj[cols[i]] = (cell && cell.v !== undefined) ? cell.v : null; });
-      return obj;
-    }).filter(r => {
-      const first = (r[cols[0]]||'').toString().toUpperCase();
-      return first && !first.includes('TOTAL') && !first.includes('VALEUR');
-    });
+
+    // La ligne 1 est le titre fusionné, la ligne 2 est les headers
+    // L'API gviz avec une feuille qui a un titre fusionné en ligne 1
+    // retourne la ligne 1 comme des colonnes sans label utile
+    // On détecte si les colonnes ressemblent à des vrais noms ou pas
+    const hasRealCols = cols.some(c => ['Produit_ID','Ref_Produit','Nom_Produit','Quantite'].includes(c));
+
+    let rows = json.table.rows;
+    if (!hasRealCols && rows.length > 0) {
+      // La vraie ligne header est en fait la première ligne de données
+      // On la récupère comme headers
+      const firstRow = rows[0].c.map(cell => (cell && cell.v !== undefined) ? cell.v : '');
+      const realCols = firstRow.map(v => (v||'').toString().replace(/[\n\r]+/g,'_').trim());
+      rows = rows.slice(1).map(row => {
+        const obj = {};
+        row.c.forEach((cell,i) => { obj[realCols[i]] = (cell && cell.v !== undefined) ? cell.v : null; });
+        return obj;
+      });
+      data.stock = rows.filter(r => {
+        const first = (r[realCols[0]]||'').toString().toUpperCase();
+        return first && !first.includes('TOTAL') && !first.includes('VALEUR') && first !== '';
+      });
+    } else {
+      data.stock = rows.map(row => {
+        const obj = {};
+        row.c.forEach((cell,i) => { obj[cols[i]] = (cell && cell.v !== undefined) ? cell.v : null; });
+        return obj;
+      }).filter(r => {
+        const first = (r[cols[0]]||'').toString().toUpperCase();
+        return first && !first.includes('TOTAL') && !first.includes('VALEUR') && first !== '';
+      });
+    }
     return data.stock.length > 0;
   } catch(e) { data.stock = []; return false; }
 }
