@@ -13,7 +13,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0f1923;--surface:#1a2636;--surface2:#223044;--accent:#00d4a8;--accent2:#3b82f6;--warn:#f59e0b;--danger:#ef4444;--text:#f0f4f8;--text2:#8fa3b8;--border:rgba(255,255,255,0.08);--radius:14px}
+:root{--bg:#0f1923;--surface:#1a2636;--surface2:#223044;--accent:#00d4a8;--warn:#f59e0b;--danger:#ef4444;--text:#f0f4f8;--text2:#8fa3b8;--border:rgba(255,255,255,0.08);--radius:14px}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;max-width:430px;margin:0 auto;overflow-x:hidden}
 .status-bar{background:var(--surface);padding:12px 20px 8px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border)}
@@ -28,7 +28,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .screen{display:none;padding:16px 16px 90px;animation:fadeIn .2s ease}
 .screen.active{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-/* LOGIN */
 .login-wrap{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;background:var(--bg)}
 .login-logo{font-size:36px;font-weight:700;margin-bottom:6px}
 .login-logo span{color:var(--accent)}
@@ -36,18 +35,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .login-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;width:100%}
 .login-title{font-size:16px;font-weight:500;margin-bottom:16px;text-align:center}
 .login-error{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--danger);margin-bottom:12px;display:none}
-/* CARDS */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px}
-.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
-.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
-.stat-label{font-size:11px;color:var(--text2);margin-bottom:6px;font-weight:500;text-transform:uppercase;letter-spacing:.5px}
-.stat-value{font-size:26px;font-weight:600;font-family:'DM Mono',monospace}
-.stat-value.accent{color:var(--accent)}
 .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500}
 .badge-ok{background:rgba(0,212,168,.15);color:var(--accent)}
 .badge-warn{background:rgba(245,158,11,.15);color:var(--warn)}
 .badge-danger{background:rgba(239,68,68,.15);color:var(--danger)}
-.badge-blue{background:rgba(59,130,246,.15);color:var(--accent2)}
+.badge-blue{background:rgba(59,130,246,.15);color:#3b82f6}
 .list-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
 .list-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
 .list-info{flex:1;min-width:0}
@@ -64,45 +57,36 @@ select.form-input{cursor:pointer}
 .btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);margin-top:8px}
 .sign-pad{width:100%;height:90px;background:var(--surface2);border:1px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--text2);margin-bottom:12px;cursor:pointer}
 .sign-pad.signed{border-color:var(--accent);border-style:solid;color:var(--accent)}
-.loader{text-align:center;padding:40px;color:var(--text2);font-size:14px}
+.loader{text-align:center;padding:20px;color:var(--text2);font-size:13px}
 .spinner{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--accent);color:#0f1923;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:200;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1}
-.stock-bar-bg{background:var(--surface2);border-radius:4px;height:4px;margin-top:6px}
-.stock-bar-fill{height:4px;border-radius:4px}
-.bl-detail-item{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
-.bl-detail-item:last-child{border-bottom:none}
 .agent-banner{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px}
 .agent-avatar{width:40px;height:40px;border-radius:50%;background:rgba(0,212,168,.15);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:var(--accent);flex-shrink:0}
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
 <div id="login-screen" class="login-wrap">
   <div class="login-logo">Stock<span>Fleet</span></div>
   <p class="login-sub">Gestion de stock véhicules</p>
   <div class="login-card">
     <p class="login-title">Identifiez-vous</p>
-    <div class="login-error" id="login-error">Nom non reconnu. Vérifiez l'orthographe.</div>
-    <label class="form-label">Votre nom (tel qu'il apparaît dans Google Sheets)</label>
-    <input class="form-input" id="login-name" type="text" placeholder="ex: SYLVAIN" autocomplete="off" style="text-transform:uppercase">
+    <div class="login-error" id="login-error"></div>
+    <label class="form-label">Votre nom (identique à Google Sheets)</label>
+    <input class="form-input" id="login-name" type="text" placeholder="ex: WILLIAM" autocomplete="off" style="text-transform:uppercase">
     <button class="btn btn-primary" onclick="doLogin()">Connexion</button>
   </div>
 </div>
 
-<!-- APP -->
 <div id="app" style="display:none">
   <div class="status-bar">
     <div class="app-logo">Stock<span>Fleet</span></div>
     <div class="agent-pill" onclick="logout()">👤 <span id="agent-name-display"></span> ✕</div>
   </div>
-
   <div class="screen active" id="screen-bl"></div>
   <div class="screen" id="screen-newbl"></div>
-<div id="debug-panel" style="display:none;position:fixed;top:60px;left:0;right:0;background:#1a2636;color:#00d4a8;font-size:11px;padding:8px 12px;z-index:999;border-bottom:1px solid rgba(255,255,255,0.1)"></div>
-
   <nav class="nav">
     <div class="nav-item active" onclick="showScreen('bl',this)">
       <span class="icon">📋</span><span class="label">Bons de livraison</span>
@@ -117,52 +101,46 @@ select.form-input{cursor:pointer}
 
 <script>
 const SHEET_ID = '1yeysIr5r1I9PYjFhTkabWhG4T2jCut9GNQJki80b06s';
-// ⬇ Coller ici l'URL de déploiement de ton Google Apps Script
 const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyWZ4k7cGYY2DupNsavOGXGODtnGvv14Yciev259WpFP9X4ApN_OQRPYrSEdLv8HP57Lg/exec';
 const BASE = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=`;
 
-let data = { vehicles:[], products:[], stock:[], bls:[] };
-let currentAgent = null;
+let data = { vehicles:[], products:[], bls:[], stock:[] };
+let agent = null; // { name, vehicleId, immat }
 let pdfBlob = null;
 
-// ── Utils ──────────────────────────────────────────────────────
-async function fetchSheet(name) {
+// ── Fetch ──────────────────────────────────────────────────────
+async function gvizFetch(sheetName, headersRow) {
   try {
-    const r = await fetch(BASE + encodeURIComponent(name));
+    let url = BASE + encodeURIComponent(sheetName);
+    if (headersRow) url += '&headers=' + headersRow;
+    const r = await fetch(url);
     const txt = await r.text();
-    const match = txt.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
-    if (!match) return [];
-    const json = JSON.parse(match[1]);
+    const m = txt.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
+    if (!m) return [];
+    const json = JSON.parse(m[1]);
     if (!json.table || !json.table.rows) return [];
-    const cols = json.table.cols.map(c => (c.label||c.id||'').replace(/[\n\r]+/g,'_').trim());
-    const rows = json.table.rows.map(row => {
+    const cols = json.table.cols.map(c => (c.label || c.id || '').replace(/[\n\r]+/g, ' ').trim());
+    return json.table.rows.map(row => {
       const obj = {};
-      row.c.forEach((cell,i) => { obj[cols[i]] = (cell && cell.v !== undefined) ? cell.v : null; });
+      row.c.forEach((cell, i) => { obj[cols[i]] = (cell && cell.v != null) ? cell.v : null; });
       return obj;
-    }).filter(r => r[cols[0]] !== null && r[cols[0]] !== '');
-
-    // Si la première ligne ressemble à un titre fusionné (une seule valeur non nulle)
-    // ou si les colonnes n'ont pas de vrais noms (col0, col1...), on saute la 1ère ligne
-    const hasRealHeaders = cols.some(c => c && !c.startsWith('col') && c.length > 1);
-    if (!hasRealHeaders && rows.length > 1) return rows.slice(1);
-
-    // Filtrer les lignes parasites (ex: TOTAL VALEUR DU STOCK)
-    return rows.filter(r => {
-      const first = (r[cols[0]] || '').toString().toUpperCase();
-      return !first.includes('TOTAL') && !first.includes('VALEUR') && first !== '';
-    });
+    }).filter(r => Object.values(r).some(v => v !== null));
   } catch(e) { return []; }
 }
 
-async function tryFetch(names) {
-  for (const n of names) { const r = await fetchSheet(n); if (r.length) return r; }
+async function trySheets(names, headersRow) {
+  for (const n of names) {
+    const r = await gvizFetch(n, headersRow);
+    if (r.length) return r;
+  }
   return [];
 }
 
+// ── Utils ──────────────────────────────────────────────────────
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2400);
+  setTimeout(() => t.classList.remove('show'), 2500);
 }
 
 function showScreen(name, el) {
@@ -175,51 +153,80 @@ function showScreen(name, el) {
 function statusBadge(s) {
   if (!s) return '';
   const sl = s.toLowerCase();
-  if (sl.includes('ok')||sl.includes('dispo')) return `<span class="badge badge-ok">${s}</span>`;
-  if (sl.includes('bas')||sl.includes('attente')||sl.includes('prêt')) return `<span class="badge badge-warn">${s}</span>`;
-  if (sl.includes('hors')||sl.includes('critique')) return `<span class="badge badge-danger">${s}</span>`;
+  if (sl.includes('envoy') || sl.includes('ok')) return `<span class="badge badge-ok">${s}</span>`;
+  if (sl.includes('attente')) return `<span class="badge badge-warn">${s}</span>`;
   return `<span class="badge badge-blue">${s}</span>`;
 }
 
-// ── Auth ───────────────────────────────────────────────────────
+// ── Login ──────────────────────────────────────────────────────
 async function doLogin() {
   const name = document.getElementById('login-name').value.trim().toUpperCase();
-  if (!name) { showLoginError('Veuillez saisir votre nom.'); return; }
+  if (!name) { showError('Saisissez votre nom.'); return; }
 
-  showToast('Chargement...');
-  await loadAll();
+  showToast('Connexion...');
+  document.getElementById('login-error').style.display = 'none';
 
-  // Chercher le véhicule correspondant au conducteur
-  const vehicle = data.vehicles.find(v => {
-    const cond = (v.Conducteur || v[Object.keys(v)[7]] || '').toString().trim().toUpperCase();
-    return cond === name;
-  });
+  // Charger les données de base
+  const [vehicles, products, bls] = await Promise.all([
+    trySheets(['Véhicules', 'Vehicules']),
+    trySheets(['Produits']),
+    trySheets(['Bons_Livraison']),
+  ]);
+  data.vehicles = vehicles;
+  data.products = products;
+  data.bls = bls;
 
-  if (!vehicle) {
-    showLoginError('Nom non reconnu. Vérifiez l\'orthographe.');
-    return;
+  // Trouver le véhicule du conducteur (colonne 8 = Conducteur)
+  let vehicleId = '', immat = '';
+  for (const v of vehicles) {
+    const vals = Object.values(v);
+    const conducteur = (vals[7] || '').toString().trim().toUpperCase();
+    if (conducteur === name) {
+      vehicleId = (vals[0] || '').toString().trim();
+      immat = (vals[1] || '').toString().trim();
+      break;
+    }
   }
 
-  currentAgent = { name, vehicle };
-  document.getElementById('agent-name-display').textContent = name;
+  if (!vehicleId) { showError('Nom non reconnu. Vérifiez l\'orthographe.'); return; }
 
   // Charger le stock de la feuille du conducteur
-  await loadAgentStock(name);
+  const stockRows = await gvizFetch(name);
+  // La feuille a un titre en ligne 1 et headers en ligne 2
+  // On filtre les lignes dont la 1ère colonne ressemble à un ID produit
+  data.stock = stockRows.filter(r => {
+    const vals = Object.values(r);
+    const first = (vals[0] || '').toString().trim();
+    return first.startsWith('PRD-') || first.startsWith('ART') || first.match(/^\d+$/);
+  });
 
+  // Si aucun résultat, essayer avec headers=2
+  if (data.stock.length === 0) {
+    const stockRows2 = await gvizFetch(name, 2);
+    data.stock = stockRows2.filter(r => {
+      const vals = Object.values(r);
+      const first = (vals[0] || '').toString().trim();
+      return !first.toUpperCase().includes('TOTAL') && !first.toUpperCase().includes('STOCK DE') && first !== '';
+    });
+  }
+
+  agent = { name, vehicleId, immat };
+  document.getElementById('agent-name-display').textContent = name;
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
-  document.getElementById('login-error').style.display = 'none';
+
   renderBL();
   renderNewBL();
+  showToast('Bienvenue ' + name + ' !');
 }
 
-function showLoginError(msg) {
+function showError(msg) {
   const el = document.getElementById('login-error');
   el.textContent = msg; el.style.display = 'block';
 }
 
 function logout() {
-  currentAgent = null;
+  agent = null; data = { vehicles:[], products:[], bls:[], stock:[] };
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
   document.getElementById('login-name').value = '';
@@ -229,144 +236,64 @@ document.getElementById('login-name').addEventListener('keydown', e => {
   if (e.key === 'Enter') doLogin();
 });
 
-// ── Data ───────────────────────────────────────────────────────
-async function loadAll() {
-  const [v, p, b] = await Promise.all([
-    tryFetch(['Véhicules','Vehicules','🚐 Véhicules']),
-    tryFetch(['Produits','📦 Produits']),
-    tryFetch(['Bons_Livraison','📋 Bons_Livraison']),
-  ]);
-  data.vehicles = v; data.products = p; data.bls = b;
-}
-
-async function loadAgentStock(conducteurName) {
-  const clean = conducteurName.replace(/[\/\\*?\[\]:]/g, '-').substring(0, 31).trim();
-  try {
-    const url = BASE + encodeURIComponent(clean);
-    const r = await fetch(url);
-    const txt = await r.text();
-    const match = txt.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
-    if (!match) { data.stock = []; return false; }
-    const json = JSON.parse(match[1]);
-    if (!json.table || !json.table.rows) { data.stock = []; return false; }
-
-    const cols = json.table.cols.map(c => (c.label||c.id||'').replace(/[\n\r]+/g,'_').trim());
-
-    // La ligne 1 est le titre fusionné, la ligne 2 est les headers
-    // L'API gviz avec une feuille qui a un titre fusionné en ligne 1
-    // retourne la ligne 1 comme des colonnes sans label utile
-    // On détecte si les colonnes ressemblent à des vrais noms ou pas
-    const hasRealCols = cols.some(c => ['Produit_ID','Ref_Produit','Nom_Produit','Quantite'].includes(c));
-
-    let rows = json.table.rows;
-    if (!hasRealCols && rows.length > 0) {
-      // La vraie ligne header est en fait la première ligne de données
-      // On la récupère comme headers
-      const firstRow = rows[0].c.map(cell => (cell && cell.v !== undefined) ? cell.v : '');
-      const realCols = firstRow.map(v => (v||'').toString().replace(/[\n\r]+/g,'_').trim());
-      rows = rows.slice(1).map(row => {
-        const obj = {};
-        row.c.forEach((cell,i) => { obj[realCols[i]] = (cell && cell.v !== undefined) ? cell.v : null; });
-        return obj;
-      });
-      data.stock = rows.filter(r => {
-        const first = (r[realCols[0]]||'').toString().toUpperCase();
-        return first && !first.includes('TOTAL') && !first.includes('VALEUR') && first !== '';
-      });
-    } else {
-      data.stock = rows.map(row => {
-        const obj = {};
-        row.c.forEach((cell,i) => { obj[cols[i]] = (cell && cell.v !== undefined) ? cell.v : null; });
-        return obj;
-      }).filter(r => {
-        const first = (r[cols[0]]||'').toString().toUpperCase();
-        return first && !first.includes('TOTAL') && !first.includes('VALEUR') && first !== '';
-      });
-    }
-    return data.stock.length > 0;
-  } catch(e) { data.stock = []; return false; }
-}
-
-// ── Produits de l'agent ────────────────────────────────────────
-function getAgentProducts() {
-  if (!currentAgent) return [];
-  // data.stock est déjà la feuille du conducteur
+// ── Produits agent ─────────────────────────────────────────────
+function getProducts() {
   if (data.stock.length === 0) return data.products;
-
   return data.stock.map(s => {
-    const prod = data.products.find(p =>
-      (p.ID_Produit||'').toString() === (s.Produit_ID||s.ID_Produit||'').toString()
-    );
-    return {
-      id: s.Produit_ID || s.ID_Produit || '',
-      ref: s.Ref_Produit || (prod ? prod.Ref_Produit : '') || '',
-      nom: s.Nom_Produit || (prod ? prod.Nom_Produit : '') || '',
-      qte: parseFloat(s.Quantite) || 0,
-      min: parseFloat(s.Stock_Min) || 0,
-      max: parseFloat(s.Stock_Max) || 100,
-    };
+    const vals = Object.values(s);
+    const keys = Object.keys(s);
+    // Chercher les colonnes par nom ou par position
+    const nom = s.Nom_Produit || s[keys[2]] || '';
+    const ref = s.Ref_Produit || s[keys[1]] || '';
+    const qte = parseFloat(s.Quantite || s[keys[3]]) || 0;
+    return { nom: nom.toString(), ref: ref.toString(), qte };
   }).filter(p => p.nom && p.qte > 0);
 }
 
 // ── Render BL ──────────────────────────────────────────────────
 function renderBL() {
-  // Chercher les BL par ID véhicule (plusieurs tentatives de noms de colonnes)
-  const vid = currentAgent?.vehicle?.ID_Vehicule ||
-              currentAgent?.vehicle?.ID_Vehi_cule ||
-              currentAgent?.vehicle?.[Object.keys(currentAgent?.vehicle||{})[0]] || '';
-
-  const agentBLs = data.bls.filter(b => {
-    const bvid = (b.ID_Vehicule || b.ID_Vehi_cule || '').toString().trim();
-    return bvid === vid.toString().trim();
+  const myBLs = data.bls.filter(b => {
+    const bvid = (b.ID_Vehicule || '').toString().trim();
+    return bvid === agent.vehicleId;
   });
 
-  const items = agentBLs.length
-    ? agentBLs.map(b => `
+  const items = myBLs.length
+    ? myBLs.map(b => `
       <div class="list-item">
         <div class="list-icon" style="background:rgba(167,139,250,.15)">📄</div>
         <div class="list-info">
-          <div class="list-title">${b.ID_BL||''}</div>
-          <div class="list-sub">${b.Client_Nom||''} · ${b.Date_BL||''}</div>
+          <div class="list-title">${b.ID_BL || ''}</div>
+          <div class="list-sub">${b.Client_Nom || ''} · ${b.Date_BL || ''}</div>
         </div>
         ${statusBadge(b.Statut)}
       </div>`).join('')
-    : '<div class="loader" style="padding:20px;font-size:13px">Aucun bon de livraison pour ce véhicule.</div>';
+    : '<div class="loader">Aucun bon de livraison.</div>';
 
-  const vid = currentAgent?.vehicle?.ID_Vehicule ||
-             currentAgent?.vehicle?.ID_Vehi_cule ||
-             currentAgent?.vehicle?.[Object.keys(currentAgent?.vehicle||{})[0]] || '';
-  const cond = currentAgent?.name || '';
-  const allKeys = Object.keys(currentAgent?.vehicle||{}).join(', ');
   document.getElementById('screen-bl').innerHTML = `
     <div class="agent-banner">
-      <div class="agent-avatar">${cond.charAt(0)}</div>
+      <div class="agent-avatar">${agent.name.charAt(0)}</div>
       <div>
-        <div style="font-size:14px;font-weight:500">${cond}</div>
-        <div style="font-size:12px;color:var(--text2)">ID: ${vid} · ${currentAgent?.vehicle?.Immatriculation||''}</div>
-        <div style="font-size:10px;color:var(--text2);margin-top:2px">BL filtrés: ${agentBLs.length} / ${data.bls.length} total</div>
+        <div style="font-size:14px;font-weight:500">${agent.name}</div>
+        <div style="font-size:12px;color:var(--text2)">${agent.vehicleId} · ${agent.immat}</div>
       </div>
     </div>
-    <p class="section-title">${agentBLs.length} bon(s) de livraison</p>
-    ${items}
-  `;
+    <p class="section-title">${myBLs.length} bon(s) de livraison</p>
+    ${items}`;
 }
 
 // ── Render Nouveau BL ──────────────────────────────────────────
 function renderNewBL() {
-  const prods = getAgentProducts();
-  const pOptions = prods.map(p =>
-    `<option value="${p.id}">${p.ref ? p.ref+' — ' : ''}${p.nom}</option>`
+  const prods = getProducts();
+  const pOpts = prods.map(p =>
+    `<option value="${p.ref}">${p.ref ? p.ref + ' — ' : ''}${p.nom}</option>`
   ).join('');
-
-  const vid = currentAgent?.vehicle?.ID_Vehicule || '';
-  const immat = currentAgent?.vehicle?.Immatriculation || '';
 
   document.getElementById('screen-newbl').innerHTML = `
     <div class="agent-banner">
-      <div class="agent-avatar">${currentAgent?.name?.charAt(0)||'?'}</div>
+      <div class="agent-avatar">${agent.name.charAt(0)}</div>
       <div>
-        <div style="font-size:14px;font-weight:500">${currentAgent?.name||''}</div>
-        <div style="font-size:12px;color:var(--text2)">${vid} · ${immat} · ${prods.length} produit(s)</div>
+        <div style="font-size:14px;font-weight:500">${agent.name}</div>
+        <div style="font-size:12px;color:var(--text2)">${agent.vehicleId} · ${prods.length} produit(s)</div>
       </div>
     </div>
     <p class="section-title">Nouveau bon de livraison</p>
@@ -380,49 +307,44 @@ function renderNewBL() {
     <div id="bl-products">
       <div class="card" style="margin-bottom:8px">
         <label class="form-label">Produit</label>
-        <select class="form-input">${pOptions}</select>
+        <select class="form-input">${pOpts || '<option>Aucun produit en stock</option>'}</select>
         <label class="form-label">Quantité</label>
         <input class="form-input" type="number" value="1" min="1">
       </div>
     </div>
-    <button class="btn btn-secondary" onclick="addProductLine()">+ Ajouter un produit</button>
+    <button class="btn btn-secondary" onclick="addLine()">+ Ajouter un produit</button>
     <p class="section-title" style="margin-top:16px">Signature client</p>
     <div class="sign-pad" id="sign-pad" onclick="toggleSign()">Appuyer pour signer</div>
     <button class="btn btn-primary" style="margin-top:8px" onclick="sendViaWhatsApp()">📲 Envoyer via WhatsApp</button>
     <div id="pdf-preview" style="display:none;margin-top:12px">
       <iframe id="pdf-frame" style="width:100%;height:500px;border-radius:10px;border:1px solid rgba(255,255,255,0.1)"></iframe>
       <button class="btn btn-secondary" style="margin-top:8px" onclick="sharePDF()">📲 Partager via WhatsApp</button>
-    </div>
-  `;
+    </div>`;
 }
 
-function addProductLine() {
-  const prods = getAgentProducts();
-  const pOptions = prods.map(p =>
-    `<option value="${p.id}">${p.ref ? p.ref+' — ' : ''}${p.nom}</option>`
+function addLine() {
+  const prods = getProducts();
+  const pOpts = prods.map(p =>
+    `<option value="${p.ref}">${p.ref ? p.ref + ' — ' : ''}${p.nom}</option>`
   ).join('');
   const div = document.createElement('div');
   div.className = 'card'; div.style.marginBottom = '8px';
   div.innerHTML = `
     <label class="form-label">Produit</label>
-    <select class="form-input">${pOptions}</select>
+    <select class="form-input">${pOpts}</select>
     <label class="form-label">Quantité</label>
     <input class="form-input" type="number" value="1" min="1">
-    <button class="btn btn-secondary" style="padding:7px;font-size:12px;color:var(--danger);border-color:var(--danger)" onclick="this.closest('.card').remove()">Supprimer</button>
-  `;
+    <button class="btn btn-secondary" style="padding:7px;font-size:12px;color:var(--danger)" onclick="this.closest('.card').remove()">Supprimer</button>`;
   document.getElementById('bl-products').appendChild(div);
 }
 
 function toggleSign() {
   const p = document.getElementById('sign-pad');
-  if (p.classList.contains('signed')) { p.classList.remove('signed'); p.textContent = 'Appuyer pour signer'; }
-  else { p.classList.add('signed'); p.textContent = '✓ Signé'; }
+  p.classList.toggle('signed');
+  p.textContent = p.classList.contains('signed') ? '✓ Signé' : 'Appuyer pour signer';
 }
 
 function getBLData() {
-  const conducteur = currentAgent?.name || '';
-  const vehicule = currentAgent?.vehicle?.ID_Vehicule || '';
-  const immat = currentAgent?.vehicle?.Immatriculation || '';
   const client = document.getElementById('bl-client')?.value || '';
   const adresse = document.getElementById('bl-adresse')?.value || '';
   const signe = document.getElementById('sign-pad')?.classList.contains('signed');
@@ -432,9 +354,9 @@ function getBLData() {
   document.querySelectorAll('#bl-products .card').forEach(card => {
     const sel = card.querySelector('select');
     const qty = card.querySelector('input[type=number]');
-    if (sel && qty) produits.push({ nom: sel.options[sel.selectedIndex]?.text||'', qte: qty.value });
+    if (sel && qty) produits.push({ nom: sel.options[sel.selectedIndex]?.text || '', qte: qty.value });
   });
-  return { conducteur, vehicule, immat, client, adresse, signe, date, blNum, produits };
+  return { conducteur: agent.name, vehiculeId: agent.vehicleId, immat: agent.immat, client, adresse, signe, date, blNum, produits };
 }
 
 // ── PDF ────────────────────────────────────────────────────────
@@ -442,7 +364,6 @@ function buildPDF(d) {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
   const W = 210, m = 18;
-
   doc.setFillColor(15,25,35); doc.rect(0,0,W,32,'F');
   doc.setTextColor(0,212,168); doc.setFontSize(22); doc.setFont('helvetica','bold');
   doc.text('StockFleet', m, 18);
@@ -451,28 +372,24 @@ function buildPDF(d) {
   doc.setTextColor(255,255,255); doc.setFontSize(11);
   doc.text(d.blNum, W-m, 18, {align:'right'});
   doc.setFontSize(9); doc.text(d.date, W-m, 26, {align:'right'});
-
   let y = 44;
   const hw = (W-m*2)/2-4;
   doc.setFillColor(240,245,250);
   doc.roundedRect(m, y, hw, 36, 3, 3, 'F');
   doc.roundedRect(m+hw+8, y, hw, 36, 3, 3, 'F');
-
   doc.setFontSize(8); doc.setTextColor(100,120,140);
   doc.text('AGENT', m+4, y+7);
   doc.setFontSize(11); doc.setTextColor(20,20,20); doc.setFont('helvetica','bold');
   doc.text(d.conducteur, m+4, y+16);
   doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(100,120,140);
   doc.text(d.immat||'', m+4, y+23);
-
   const cx = m+hw+12;
   doc.setFontSize(8); doc.setTextColor(100,120,140);
   doc.text('CLIENT', cx, y+7);
   doc.setFontSize(11); doc.setTextColor(20,20,20); doc.setFont('helvetica','bold');
-  doc.text(d.client, cx, y+16);
+  doc.text(d.client||'', cx, y+16);
   doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(80,80,80);
   if (d.adresse) doc.text(d.adresse, cx, y+24);
-
   y += 46;
   doc.setFillColor(15,25,35); doc.rect(m, y, W-m*2, 9, 'F');
   doc.setTextColor(255,255,255); doc.setFontSize(9); doc.setFont('helvetica','bold');
@@ -488,7 +405,6 @@ function buildPDF(d) {
     doc.text(String(p.qte), W-m-4, y+5.5, {align:'right'});
     doc.setFont('helvetica','normal'); y += 8;
   });
-
   y += 6;
   doc.setDrawColor(200,210,220); doc.line(m, y, W-m, y);
   y += 10;
@@ -500,7 +416,6 @@ function buildPDF(d) {
   } else {
     doc.setDrawColor(180,190,200); doc.roundedRect(m, y+3, 70, 18, 2, 2);
   }
-
   doc.setFillColor(240,245,250); doc.rect(0,282,W,15,'F');
   doc.setFontSize(8); doc.setTextColor(120,140,160);
   doc.text('StockFleet — ' + d.date, W/2, 290, {align:'center'});
@@ -510,43 +425,26 @@ function buildPDF(d) {
 async function sendViaWhatsApp() {
   const d = getBLData();
   if (!d.client) { showToast('⚠ Renseignez le client'); return; }
-
-  // Générer le PDF
   const doc = buildPDF(d);
   pdfBlob = doc.output('blob');
   const url = URL.createObjectURL(pdfBlob);
   document.getElementById('pdf-frame').src = url;
   document.getElementById('pdf-preview').style.display = 'block';
   document.getElementById('pdf-preview').scrollIntoView({ behavior:'smooth' });
-
-  // Envoyer au Google Apps Script pour mettre à jour les stocks
-  showToast('Mise à jour du stock...');
   try {
     await fetch(WEBAPP_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        conducteur: d.conducteur,
-        blNum: d.blNum,
-        date: d.date,
-        client: d.client,
-        adresse: d.adresse,
-        produits: d.produits
-      })
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ conducteur:d.conducteur, blNum:d.blNum, date:d.date, client:d.client, adresse:d.adresse, produits:d.produits })
     });
-    // Recharger le stock après mise à jour (attendre 2s que le script ait traité)
     setTimeout(async () => {
-      await loadAgentStock(d.conducteur);
+      const s = await gvizFetch(d.conducteur);
+      data.stock = s.filter(r => { const v = Object.values(r)[0]; return v && !v.toString().toUpperCase().includes('TOTAL'); });
       renderNewBL();
       showToast('Stock mis à jour ✓');
     }, 2000);
-  } catch(err) {
-    console.log('Erreur envoi script:', err);
-  }
-
-  // Ouvrir WhatsApp
-  const msg = encodeURIComponent(`Bonjour ${d.client},\n\nVotre bon de livraison ${d.blNum} est prêt.\nAgent : ${d.conducteur}\nVéhicule : ${d.immat}\nDate : ${d.date}\n\nCordialement,\nStockFleet`);
+  } catch(e) {}
+  const msg = encodeURIComponent(`Bonjour ${d.client},\n\nVotre bon de livraison ${d.blNum} est prêt.\nAgent : ${d.conducteur} (${d.immat})\nDate : ${d.date}\n\nCordialement,\nStockFleet`);
   setTimeout(() => window.open(`https://wa.me/?text=${msg}`), 600);
   showToast('PDF prêt + WhatsApp ouvert ✓');
 }
@@ -556,11 +454,9 @@ async function sharePDF() {
   const d = getBLData();
   const file = new File([pdfBlob], `${d.blNum}_${d.client.replace(/\s+/g,'_')}.pdf`, {type:'application/pdf'});
   if (navigator.share && navigator.canShare && navigator.canShare({files:[file]})) {
-    try { await navigator.share({files:[file], title:`BL ${d.blNum}`, text:`Bon de livraison ${d.blNum}`}); }
-    catch(e) { if (e.name !== 'AbortError') window.open('https://wa.me/?text=' + encodeURIComponent(`BL ${d.blNum}`)); }
-  } else {
-    window.open(URL.createObjectURL(pdfBlob), '_blank');
+    try { await navigator.share({files:[file], title:`BL ${d.blNum}`}); return; } catch(e) {}
   }
+  window.open(URL.createObjectURL(pdfBlob), '_blank');
 }
 </script>
 </body>
