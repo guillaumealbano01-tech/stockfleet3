@@ -116,6 +116,8 @@ select.form-input{cursor:pointer}
 
 <script>
 const SHEET_ID = '1_OC5t-g2dCq2cbrxjGhIv0JtjJHyrraH8ZAkSFzgnlg';
+// ⬇ Coller ici l'URL de déploiement de ton Google Apps Script
+const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyWZ4k7cGYY2DupNsavOGXGODtnGvv14Yciev259WpFP9X4ApN_OQRPYrSEdLv8HP57Lg/exec';
 const BASE = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=`;
 
 let data = { vehicles:[], products:[], stock:[], bls:[] };
@@ -188,6 +190,10 @@ async function doLogin() {
 
   currentAgent = { name, vehicle };
   document.getElementById('agent-name-display').textContent = name;
+
+  // Charger le stock de la feuille du conducteur
+  await loadAgentStock(name);
+
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   document.getElementById('login-error').style.display = 'none';
@@ -213,42 +219,41 @@ document.getElementById('login-name').addEventListener('keydown', e => {
 
 // ── Data ───────────────────────────────────────────────────────
 async function loadAll() {
-  const [v, p, s, b] = await Promise.all([
+  const [v, p, b] = await Promise.all([
     tryFetch(['Vehicules','🚐 Véhicules']),
     tryFetch(['Produits','📦 Produits']),
-    tryFetch(['Stock_Vehicules','📊 Stock_Vehicules']),
     tryFetch(['Bons_Livraison','📋 Bons_Livraison']),
   ]);
-  data.vehicles = v; data.products = p; data.stock = s; data.bls = b;
+  data.vehicles = v; data.products = p; data.bls = b;
+}
+
+async function loadAgentStock(conducteurName) {
+  // Charger la feuille portant le nom du conducteur
+  const clean = conducteurName.replace(/[\/\\*?\[\]:]/g, '-').substring(0, 31).trim();
+  const stock = await fetchSheet(clean);
+  data.stock = stock;
+  return stock.length > 0;
 }
 
 // ── Produits de l'agent ────────────────────────────────────────
 function getAgentProducts() {
   if (!currentAgent) return [];
-  const vid = currentAgent.vehicle.ID_Vehicule || currentAgent.vehicle[Object.keys(currentAgent.vehicle)[0]];
+  // data.stock est déjà la feuille du conducteur
+  if (data.stock.length === 0) return data.products;
 
-  // Lignes de stock pour ce véhicule
-  const stockLines = data.stock.filter(s => {
-    const sv = (s.ID_Vehicule || '').toString().trim();
-    return sv === vid;
-  });
-
-  if (stockLines.length === 0) return data.products; // fallback: tous les produits
-
-  // Enrichir avec infos produit
-  return stockLines.map(s => {
+  return data.stock.map(s => {
     const prod = data.products.find(p =>
-      (p.ID_Produit||'').toString() === (s.ID_Produit||'').toString()
+      (p.ID_Produit||'').toString() === (s.Produit_ID||s.ID_Produit||'').toString()
     );
     return {
-      id: s.ID_Produit || '',
+      id: s.Produit_ID || s.ID_Produit || '',
       ref: s.Ref_Produit || (prod ? prod.Ref_Produit : '') || '',
-      nom: s.Nom_Produit || (prod ? prod.Nom_Produit : '') || s.ID_Produit || '',
-      qte: parseFloat(s.Quantite_Actuelle) || 0,
-      min: prod ? (parseFloat(prod.Stock_Min) || 0) : 0,
-      max: prod ? (parseFloat(prod.Stock_Max) || 100) : 100,
+      nom: s.Nom_Produit || (prod ? prod.Nom_Produit : '') || '',
+      qte: parseFloat(s.Quantite) || 0,
+      min: parseFloat(s.Stock_Min) || 0,
+      max: parseFloat(s.Stock_Max) || 100,
     };
-  });
+  }).filter(p => p.nom && p.qte > 0);
 }
 
 // ── Render BL ──────────────────────────────────────────────────
@@ -445,6 +450,7 @@ async function sendViaWhatsApp() {
   const d = getBLData();
   if (!d.client) { showToast('⚠ Renseignez le client'); return; }
 
+  // Générer le PDF
   const doc = buildPDF(d);
   pdfBlob = doc.output('blob');
   const url = URL.createObjectURL(pdfBlob);
@@ -452,8 +458,35 @@ async function sendViaWhatsApp() {
   document.getElementById('pdf-preview').style.display = 'block';
   document.getElementById('pdf-preview').scrollIntoView({ behavior:'smooth' });
 
+  // Envoyer au Google Apps Script pour mettre à jour les stocks
+  showToast('Mise à jour du stock...');
+  try {
+    if (WEBAPP_URL && WEBAPP_URL !== 'https://script.google.com/macros/s/AKfycbyWZ4k7cGYY2DupNsavOGXGODtnGvv14Yciev259WpFP9X4ApN_OQRPYrSEdLv8HP57Lg/exec') {
+      await fetch(WEBAPP_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conducteur: d.conducteur,
+          blNum: d.blNum,
+          date: d.date,
+          client: d.client,
+          adresse: d.adresse,
+          produits: d.produits
+        })
+      });
+      showToast('Stock mis à jour ✓');
+      // Recharger le stock de l'agent
+      await loadAgentStock(d.conducteur);
+      renderNewBL();
+    }
+  } catch(err) {
+    console.log('Erreur envoi script:', err);
+  }
+
+  // Ouvrir WhatsApp
   const msg = encodeURIComponent(`Bonjour ${d.client},\n\nVotre bon de livraison ${d.blNum} est prêt.\nAgent : ${d.conducteur}\nVéhicule : ${d.immat}\nDate : ${d.date}\n\nCordialement,\nStockFleet`);
-  setTimeout(() => window.open(`https://wa.me/?text=${msg}`), 500);
+  setTimeout(() => window.open(`https://wa.me/?text=${msg}`), 600);
   showToast('PDF prêt + WhatsApp ouvert ✓');
 }
 
