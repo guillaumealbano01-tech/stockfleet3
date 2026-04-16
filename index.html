@@ -134,11 +134,22 @@ async function fetchSheet(name) {
     const json = JSON.parse(match[1]);
     if (!json.table || !json.table.rows) return [];
     const cols = json.table.cols.map(c => (c.label||c.id||'').replace(/[\n\r]+/g,'_').trim());
-    return json.table.rows.map(row => {
+    const rows = json.table.rows.map(row => {
       const obj = {};
       row.c.forEach((cell,i) => { obj[cols[i]] = (cell && cell.v !== undefined) ? cell.v : null; });
       return obj;
     }).filter(r => r[cols[0]] !== null && r[cols[0]] !== '');
+
+    // Si la première ligne ressemble à un titre fusionné (une seule valeur non nulle)
+    // ou si les colonnes n'ont pas de vrais noms (col0, col1...), on saute la 1ère ligne
+    const hasRealHeaders = cols.some(c => c && !c.startsWith('col') && c.length > 1);
+    if (!hasRealHeaders && rows.length > 1) return rows.slice(1);
+
+    // Filtrer les lignes parasites (ex: TOTAL VALEUR DU STOCK)
+    return rows.filter(r => {
+      const first = (r[cols[0]] || '').toString().toUpperCase();
+      return !first.includes('TOTAL') && !first.includes('VALEUR') && first !== '';
+    });
   } catch(e) { return []; }
 }
 
@@ -228,11 +239,27 @@ async function loadAll() {
 }
 
 async function loadAgentStock(conducteurName) {
-  // Charger la feuille portant le nom du conducteur
   const clean = conducteurName.replace(/[\/\\*?\[\]:]/g, '-').substring(0, 31).trim();
-  const stock = await fetchSheet(clean);
-  data.stock = stock;
-  return stock.length > 0;
+  // headers=3 indique à l'API que les vrais headers sont en ligne 2 (ligne 1 = titre)
+  try {
+    const url = BASE + encodeURIComponent(clean) + '&headers=3';
+    const r = await fetch(url);
+    const txt = await r.text();
+    const match = txt.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
+    if (!match) { data.stock = []; return false; }
+    const json = JSON.parse(match[1]);
+    if (!json.table || !json.table.rows) { data.stock = []; return false; }
+    const cols = json.table.cols.map(c => (c.label||c.id||'').replace(/[\n\r]+/g,'_').trim());
+    data.stock = json.table.rows.map(row => {
+      const obj = {};
+      row.c.forEach((cell,i) => { obj[cols[i]] = (cell && cell.v !== undefined) ? cell.v : null; });
+      return obj;
+    }).filter(r => {
+      const first = (r[cols[0]]||'').toString().toUpperCase();
+      return first && !first.includes('TOTAL') && !first.includes('VALEUR');
+    });
+    return data.stock.length > 0;
+  } catch(e) { data.stock = []; return false; }
 }
 
 // ── Produits de l'agent ────────────────────────────────────────
