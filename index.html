@@ -522,15 +522,8 @@ function renderIntervention() {
       <input class="form-input" id="int-compteur" type="number" step="1" placeholder="ex: 1254">
     </div>
 
-    <p class="section-title">Produits utilisés / livrés</p>
-    <div id="int-products">
-      <div class="card" style="margin-bottom:8px">
-        <label class="form-label">Produit</label>
-        <select class="form-input">${pOpts || '<option>Aucun produit en stock</option>'}</select>
-        <label class="form-label">Quantité</label>
-        <input class="form-input" type="number" value="1" min="1">
-      </div>
-    </div>
+    <p class="section-title">Produits utilisés / livrés <span style="color:var(--text2);font-weight:400;text-transform:none;letter-spacing:0">(optionnel)</span></p>
+    <div id="int-products"></div>
     <button class="btn btn-secondary" onclick="addIntLine()">+ Ajouter un produit</button>
 
     <label class="form-label" style="margin-top:16px">Observations</label>
@@ -566,7 +559,9 @@ async function saveIntervention() {
   document.querySelectorAll('#int-products .card').forEach(card => {
     const sel = card.querySelector('select');
     const qty = card.querySelector('input[type=number]');
-    if (sel && qty) produits.push({ nom: sel.options[sel.selectedIndex]?.text || '', qte: qty.value });
+    if (sel && qty && parseFloat(qty.value) > 0) {
+      produits.push({ nom: sel.options[sel.selectedIndex]?.text || '', qte: qty.value });
+    }
   });
 
   const payload = {
