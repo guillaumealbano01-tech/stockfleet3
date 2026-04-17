@@ -87,12 +87,16 @@ select.form-input{cursor:pointer}
   </div>
   <div class="screen active" id="screen-bl"></div>
   <div class="screen" id="screen-newbl"></div>
+  <div class="screen" id="screen-intervention"></div>
   <nav class="nav">
     <div class="nav-item active" onclick="showScreen('bl',this)">
-      <span class="icon">📋</span><span class="label">Bons de livraison</span>
+      <span class="icon">📋</span><span class="label">Bons BL</span>
     </div>
     <div class="nav-item" onclick="showScreen('newbl',this)">
       <span class="icon">＋</span><span class="label">Nouveau BL</span>
+    </div>
+    <div class="nav-item" onclick="showScreen('intervention',this)">
+      <span class="icon">🔬</span><span class="label">Intervention</span>
     </div>
   </nav>
 </div>
@@ -217,6 +221,7 @@ async function doLogin() {
 
   renderBL();
   renderNewBL();
+  renderIntervention();
   showToast('Bienvenue ' + name + ' !');
 }
 
@@ -457,6 +462,157 @@ async function sharePDF() {
     try { await navigator.share({files:[file], title:`BL ${d.blNum}`}); return; } catch(e) {}
   }
   window.open(URL.createObjectURL(pdfBlob), '_blank');
+}
+
+// ── Fiche Intervention ─────────────────────────────────────────
+function renderIntervention() {
+  if (!agent) return;
+  const prods = getProducts();
+  const pOpts = prods.map(p =>
+    `<option value="${p.ref}">${p.ref ? p.ref + ' — ' : ''}${p.nom}</option>`
+  ).join('');
+  const today = new Date().toISOString().split('T')[0];
+
+  document.getElementById('screen-intervention').innerHTML = `
+    <div class="agent-banner">
+      <div class="agent-avatar">${agent.name.charAt(0)}</div>
+      <div>
+        <div style="font-size:14px;font-weight:500">${agent.name}</div>
+        <div style="font-size:12px;color:var(--text2)">Fiche d'intervention</div>
+      </div>
+    </div>
+
+    <p class="section-title">Informations</p>
+    <div class="card">
+      <label class="form-label">Client / Piscine <span style="color:var(--danger)">*</span></label>
+      <input class="form-input" id="int-client" type="text" placeholder="Nom du client">
+      <label class="form-label">Date de passage</label>
+      <input class="form-input" id="int-date" type="date" value="${today}">
+    </div>
+
+    <p class="section-title">Analyses d'eau</p>
+    <div class="card">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label class="form-label">Taux de chlore (mg/L)</label>
+          <input class="form-input" id="int-chlore" type="number" step="0.1" placeholder="ex: 1.5">
+        </div>
+        <div>
+          <label class="form-label">pH</label>
+          <input class="form-input" id="int-ph" type="number" step="0.1" placeholder="ex: 7.2">
+        </div>
+        <div>
+          <label class="form-label">Température (°C)</label>
+          <input class="form-input" id="int-temp" type="number" step="0.1" placeholder="ex: 26">
+        </div>
+        <div>
+          <label class="form-label">TAC (°f)</label>
+          <input class="form-input" id="int-tac" type="number" step="1" placeholder="ex: 120">
+        </div>
+        <div>
+          <label class="form-label">Stabilisant (mg/L)</label>
+          <input class="form-input" id="int-stab" type="number" step="1" placeholder="ex: 50">
+        </div>
+        <div>
+          <label class="form-label">Durée filtration (h)</label>
+          <input class="form-input" id="int-filtr" type="number" step="0.5" placeholder="ex: 8">
+        </div>
+      </div>
+      <label class="form-label" style="margin-top:4px">Compteur d'eau (m³)</label>
+      <input class="form-input" id="int-compteur" type="number" step="1" placeholder="ex: 1254">
+    </div>
+
+    <p class="section-title">Produits utilisés / livrés</p>
+    <div id="int-products">
+      <div class="card" style="margin-bottom:8px">
+        <label class="form-label">Produit</label>
+        <select class="form-input">${pOpts || '<option>Aucun produit en stock</option>'}</select>
+        <label class="form-label">Quantité</label>
+        <input class="form-input" type="number" value="1" min="1">
+      </div>
+    </div>
+    <button class="btn btn-secondary" onclick="addIntLine()">+ Ajouter un produit</button>
+
+    <label class="form-label" style="margin-top:16px">Observations</label>
+    <textarea class="form-input" id="int-obs" rows="3" placeholder="Remarques, travaux effectués..."></textarea>
+
+    <button class="btn btn-primary" style="margin-top:8px" onclick="saveIntervention()">💾 Enregistrer la fiche</button>
+    <div id="int-confirm" style="display:none;margin-top:10px;padding:10px 14px;background:rgba(0,212,168,.1);border:1px solid rgba(0,212,168,.3);border-radius:10px;font-size:13px;color:var(--accent)">
+      Fiche enregistrée avec succès ✓
+    </div>`;
+}
+
+function addIntLine() {
+  const prods = getProducts();
+  const pOpts = prods.map(p =>
+    `<option value="${p.ref}">${p.ref ? p.ref + ' — ' : ''}${p.nom}</option>`
+  ).join('');
+  const div = document.createElement('div');
+  div.className = 'card'; div.style.marginBottom = '8px';
+  div.innerHTML = `
+    <label class="form-label">Produit</label>
+    <select class="form-input">${pOpts}</select>
+    <label class="form-label">Quantité</label>
+    <input class="form-input" type="number" value="1" min="1">
+    <button class="btn btn-secondary" style="padding:7px;font-size:12px;color:var(--danger)" onclick="this.closest('.card').remove()">Supprimer</button>`;
+  document.getElementById('int-products').appendChild(div);
+}
+
+async function saveIntervention() {
+  const client = document.getElementById('int-client')?.value?.trim();
+  if (!client) { showToast('⚠ Renseignez le client'); return; }
+
+  const produits = [];
+  document.querySelectorAll('#int-products .card').forEach(card => {
+    const sel = card.querySelector('select');
+    const qty = card.querySelector('input[type=number]');
+    if (sel && qty) produits.push({ nom: sel.options[sel.selectedIndex]?.text || '', qte: qty.value });
+  });
+
+  const payload = {
+    type: 'intervention',
+    conducteur: agent.name,
+    vehiculeId: agent.vehicleId,
+    date: document.getElementById('int-date')?.value || new Date().toLocaleDateString('fr-FR'),
+    client,
+    chlore:    document.getElementById('int-chlore')?.value || '',
+    ph:        document.getElementById('int-ph')?.value || '',
+    temp:      document.getElementById('int-temp')?.value || '',
+    tac:       document.getElementById('int-tac')?.value || '',
+    stabilisant: document.getElementById('int-stab')?.value || '',
+    filtration: document.getElementById('int-filtr')?.value || '',
+    compteur:  document.getElementById('int-compteur')?.value || '',
+    observations: document.getElementById('int-obs')?.value || '',
+    produits,
+  };
+
+  showToast('Enregistrement...');
+  try {
+    await fetch(WEBAPP_URL, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    // Déduire le stock si des produits ont été utilisés
+    if (produits.length > 0) {
+      setTimeout(async () => {
+        const s = await gvizFetch(agent.name);
+        data.stock = s.filter(r => {
+          const v = Object.values(r)[0];
+          return v && !v.toString().toUpperCase().includes('TOTAL');
+        });
+        renderNewBL();
+        renderIntervention();
+      }, 2000);
+    }
+
+    document.getElementById('int-confirm').style.display = 'block';
+    setTimeout(() => { document.getElementById('int-confirm').style.display = 'none'; }, 3000);
+    showToast('Fiche enregistrée ✓');
+  } catch(e) {
+    showToast('Erreur d'enregistrement');
+  }
 }
 </script>
 </body>
