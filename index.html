@@ -108,7 +108,7 @@ const SHEET_ID = '1yeysIr5r1I9PYjFhTkabWhG4T2jCut9GNQJki80b06s';
 const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyWZ4k7cGYY2DupNsavOGXGODtnGvv14Yciev259WpFP9X4ApN_OQRPYrSEdLv8HP57Lg/exec';
 const BASE = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=`;
 
-let data = { vehicles:[], products:[], bls:[], stock:[] };
+let data = { vehicles:[], products:[], bls:[], stock:[], interventions:[] };
 let agent = null; // { name, vehicleId, immat }
 let pdfBlob = null;
 
@@ -162,6 +162,17 @@ function statusBadge(s) {
   return `<span class="badge badge-blue">${s}</span>`;
 }
 
+function formatDate(val) {
+  if (!val) return '';
+  // Gérer le format Date(2026,3,16) retourné par gviz
+  const m = String(val).match(/Date\((\d+),(\d+),(\d+)\)/);
+  if (m) {
+    const d = new Date(parseInt(m[1]), parseInt(m[2]), parseInt(m[3]));
+    return d.toLocaleDateString('fr-FR');
+  }
+  return String(val);
+}
+
 // ── Login ──────────────────────────────────────────────────────
 async function doLogin() {
   const name = document.getElementById('login-name').value.trim().toUpperCase();
@@ -171,14 +182,16 @@ async function doLogin() {
   document.getElementById('login-error').style.display = 'none';
 
   // Charger les données de base
-  const [vehicles, products, bls] = await Promise.all([
+  const [vehicles, products, bls, interventions] = await Promise.all([
     trySheets(['Véhicules', 'Vehicules']),
     trySheets(['Produits']),
     trySheets(['Bons_Livraison']),
+    trySheets(['Interventions']),
   ]);
   data.vehicles = vehicles;
   data.products = products;
   data.bls = bls;
+  data.interventions = interventions;
 
   // Trouver le véhicule du conducteur (colonne 8 = Conducteur)
   let vehicleId = '', immat = '';
@@ -262,17 +275,33 @@ function renderBL() {
     return bvid === agent.vehicleId;
   });
 
-  const items = myBLs.length
+  const myInts = (data.interventions || []).filter(i => {
+    return (i.Agent || '').toString().trim().toUpperCase() === agent.name.toUpperCase();
+  });
+
+  const blItems = myBLs.length
     ? myBLs.map(b => `
       <div class="list-item">
         <div class="list-icon" style="background:rgba(167,139,250,.15)">📄</div>
         <div class="list-info">
           <div class="list-title">${b.ID_BL || ''}</div>
-          <div class="list-sub">${b.Client_Nom || ''} · ${b.Date_BL || ''}</div>
+          <div class="list-sub">${b.Client_Nom || ''} · ${formatDate(b.Date_BL)}</div>
         </div>
         ${statusBadge(b.Statut)}
       </div>`).join('')
     : '<div class="loader">Aucun bon de livraison.</div>';
+
+  const intItems = myInts.length
+    ? myInts.map(i => `
+      <div class="list-item">
+        <div class="list-icon" style="background:rgba(0,212,168,.1)">🔬</div>
+        <div class="list-info">
+          <div class="list-title">${i.Client || ''}</div>
+          <div class="list-sub">${formatDate(i.Date)} · Cl: ${i.Chlore||'—'} · pH: ${i.pH||'—'} · T°: ${i.Temperature||'—'}°C</div>
+        </div>
+        <span class="badge badge-ok">Fiche</span>
+      </div>`).join('')
+    : '<div class="loader">Aucune intervention.</div>';
 
   document.getElementById('screen-bl').innerHTML = `
     <div class="agent-banner">
@@ -283,7 +312,9 @@ function renderBL() {
       </div>
     </div>
     <p class="section-title">${myBLs.length} bon(s) de livraison</p>
-    ${items}`;
+    ${blItems}
+    <p class="section-title" style="margin-top:16px">${myInts.length} intervention(s)</p>
+    ${intItems}`;
 }
 
 // ── Render Nouveau BL ──────────────────────────────────────────
@@ -359,7 +390,12 @@ function getBLData() {
   document.querySelectorAll('#bl-products .card').forEach(card => {
     const sel = card.querySelector('select');
     const qty = card.querySelector('input[type=number]');
-    if (sel && qty) produits.push({ nom: sel.options[sel.selectedIndex]?.text || '', qte: qty.value });
+    if (sel && qty) {
+      const txt = sel.options[sel.selectedIndex]?.text || '';
+      const ref = sel.value || '';
+      const nom = txt.includes(' — ') ? txt.split(' — ')[1] : txt;
+      produits.push({ ref, nom, qte: qty.value });
+    }
   });
   return { conducteur: agent.name, vehiculeId: agent.vehicleId, immat: agent.immat, client, adresse, signe, date, blNum, produits };
 }
@@ -560,7 +596,10 @@ async function saveIntervention() {
     const sel = card.querySelector('select');
     const qty = card.querySelector('input[type=number]');
     if (sel && qty && parseFloat(qty.value) > 0) {
-      produits.push({ nom: sel.options[sel.selectedIndex]?.text || '', qte: qty.value });
+      const txt = sel.options[sel.selectedIndex]?.text || '';
+      const ref = sel.value || '';
+      const nom = txt.includes(' — ') ? txt.split(' — ')[1] : txt;
+      produits.push({ ref, nom, qte: qty.value });
     }
   });
 
