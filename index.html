@@ -564,21 +564,26 @@ async function saveIntervention() {
     }
   });
 
+  const dateVal = document.getElementById('int-date')?.value || '';
+  const dateFr = dateVal ? new Date(dateVal).toLocaleDateString('fr-FR') : new Date().toLocaleDateString('fr-FR');
+  const blNum = 'BL-' + Date.now().toString().slice(-6);
+
   const payload = {
     type: 'intervention',
     conducteur: agent.name,
     vehiculeId: agent.vehicleId,
-    date: document.getElementById('int-date')?.value || new Date().toLocaleDateString('fr-FR'),
+    date: dateFr,
     client,
-    chlore:    document.getElementById('int-chlore')?.value || '',
-    ph:        document.getElementById('int-ph')?.value || '',
-    temp:      document.getElementById('int-temp')?.value || '',
-    tac:       document.getElementById('int-tac')?.value || '',
+    chlore:      document.getElementById('int-chlore')?.value || '',
+    ph:          document.getElementById('int-ph')?.value || '',
+    temp:        document.getElementById('int-temp')?.value || '',
+    tac:         document.getElementById('int-tac')?.value || '',
     stabilisant: document.getElementById('int-stab')?.value || '',
-    filtration: document.getElementById('int-filtr')?.value || '',
-    compteur:  document.getElementById('int-compteur')?.value || '',
+    filtration:  document.getElementById('int-filtr')?.value || '',
+    compteur:    document.getElementById('int-compteur')?.value || '',
     observations: document.getElementById('int-obs')?.value || '',
     produits,
+    blNum,
   };
 
   showToast('Enregistrement...');
@@ -589,7 +594,7 @@ async function saveIntervention() {
       body: JSON.stringify(payload)
     });
 
-    // Déduire le stock si des produits ont été utilisés
+    // Recharger le stock si des produits ont été utilisés
     if (produits.length > 0) {
       setTimeout(async () => {
         const s = await gvizFetch(agent.name);
@@ -597,14 +602,22 @@ async function saveIntervention() {
           const v = Object.values(r)[0];
           return v && !v.toString().toUpperCase().includes('TOTAL');
         });
+        const newBLs = await gvizFetch('Bons_Livraison');
+        if (newBLs.length) data.bls = newBLs;
+        renderBL();
         renderNewBL();
         renderIntervention();
       }, 2000);
     }
 
+    const confirmMsg = produits.length > 0
+      ? `Fiche + BL ${blNum} enregistrés ✓`
+      : 'Fiche enregistrée ✓';
+
     document.getElementById('int-confirm').style.display = 'block';
-    setTimeout(() => { document.getElementById('int-confirm').style.display = 'none'; }, 3000);
-    showToast('Fiche enregistrée ✓');
+    document.getElementById('int-confirm').textContent = confirmMsg;
+    setTimeout(() => { document.getElementById('int-confirm').style.display = 'none'; }, 4000);
+    showToast(confirmMsg);
   } catch(e) {
     showToast('Erreur enregistrement');
   }
